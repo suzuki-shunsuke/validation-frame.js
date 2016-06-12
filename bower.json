@@ -1,0 +1,24 @@
+{
+  "name": "validation-rule-set.js",
+  "description": "",
+  "main": "",
+  "authors": [
+    "Suzuki Shunsuke <suzuki.shunsuke.1989@gmail.com>"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/suzuki-shunsuke/validation-rule-set.js",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.5.3",
+    "validator-js": "^5.3.0"
+  },
+  "dependencies": {
+  }
+}

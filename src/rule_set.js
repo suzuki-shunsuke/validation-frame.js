@@ -1,8 +1,8 @@
 'use strict';
 
-let validator = require('validator');
+const validator = require('validator');
 
-let rule_set = {};
+const rule_set = {};
 
 rule_set.required = value => ! validator.isNull(value);
 rule_set.min_length = (value, limit) => validator.isLength(value, {min: limit});

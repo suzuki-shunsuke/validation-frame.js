@@ -9,8 +9,6 @@
 * カスタムのバリデーションパターンを追加できる
 * 各バリデーションパターンのデフォルトパラメータを設定できる(同じ記述を繰り返さなくて済む)
 * 各バリデーション対象に複数のバリデーションパターンを優先順位付けて設定できる
-* 各バリデーション対象に設定したバリデーションパターンのうち、一部のパターンのみ選択的に実行可能
-  (これにより、バリデーションの実行タイミングをパターンごとに変更できる)
 * バリデーション後の処理(エラーメッセージの表示など)は自由に出来る(逆に言えば自動ではやってくれない。ユーザに任せている)
 * npm及びbowerで公開されている
 * MITライセンス
@@ -47,10 +45,10 @@ vf.rule_set = require('validation-rule-set');
 ## サンプルコード その1
 
 ```javascript
-let vf = require('validation-frame');
+const vf = require('validation-frame');
 vf.rule_set = require('validation-rule-set');
 
-let validate = mv.create_validate([{
+const validate = mv.create_validate([{
   'type': 'required',
   'message': '必須です!'
 }, {
@@ -65,6 +63,103 @@ let validate = mv.create_validate([{
 }]);
 
 validate('');  // {valid: false, message: '必須です!'}
-validate(rule => rule.type === 'required', '');  // {valid: false, message: '必須です!'}
-validate(['required'], '');  // {valid: false, message: '必須です!'}
 ```
+
+## 非同期のルールの組み込み方
+
+非同期のルールはasync:true を指定する必要がある。
+非同期関数としてはpromise/A+仕様をサポートしており、
+コールバック関数はサポートしていない。
+バリデーション結果がtrueならonFulfilledが、failureならonRejectedがコールされなければならない。
+
+```javascript
+const validate = mv.create_validate([{
+  type: 'custom',  // カスタム関数を設定できる
+  async: 'callback',
+  message: 'カスタムです',
+  validate: value => {
+    const deferred = m.deferred();
+    m.request({
+      url: '/validate-email'
+    }).then(resp => {
+      if (resp.result) {
+        deferred.resolve(true);
+      }
+    });
+  }
+}]);
+
+validate().then(result => {
+  console.log(result);  // {valid: false, message: '必須です'}
+});
+```
+
+非同期関数が一つでもあれば生成されるvalidate関数は
+非同期関数となる。
+
+非同期関数は優先して並列に実行される。
+その後同期関数も実行される。
+同期・非同期関わらずいずれかのバリデーション結果がfalse
+ならその場で非同期関数は中断され、結果は破棄される。
+
+```javascript
+validate(value, params, ret => {
+  if (judge(ret)) {
+    
+  } else {
+    
+  }
+})
+```
+
+
+## バリデーション関数
+
+戻り値は
+
+* true/false
+* otherwise
+
+## ジャッジ関数
+
+バリデーション関数の戻り値を引数にとり、
+trueかfalseを返す関数
+
+## メッセージ関数
+
+* 文字列
+* 関数
+
+```javascript
+function(value, params, ret)
+
+```
+
+
+---
+
+```javascript
+function validate(value, [params]) {
+  return {
+  
+  };
+}
+
+function judge(ret) {
+  return true;
+}
+
+function message(ret, value, [params]) {
+  return '';
+}
+```
+
+## rule.params
+
+validate 及び message にバインドされるパラメータ。
+paramsが配列の場合、applyされる
+
+## rule.left
+
+left が trueの場合、そのルールが trueな時点で全体が trueになる。
+
