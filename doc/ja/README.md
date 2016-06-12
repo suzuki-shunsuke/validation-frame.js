@@ -159,7 +159,23 @@ function message(ret, value, [params]) {
 validate 及び message にバインドされるパラメータ。
 paramsが配列の場合、applyされる
 
-## rule.left
+## rule.break\_valid
 
-left が trueの場合、そのルールが trueな時点で全体が trueになる。
+break\_valid が trueの場合、そのルールが trueな時点で全体が trueになる。
 
+## rule.ignore\_invalid
+
+ignore\_invalid が trueのとき、そのルールがfalseならそのルールは無視される。このオプションをtrueにするなら基本的にbreak\_validもtrueにすべきである。
+
+次の例は空文字か10文字以上の場合trueになる。
+
+```javascript
+const validate = mv.create_validate([{
+  'type': 'empty',
+  'break_valid': true,
+  'ignore_invalid': true
+}, {
+  'type': 'minlength',
+  'params': 10
+}]);
+```

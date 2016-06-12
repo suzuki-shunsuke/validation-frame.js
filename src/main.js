@@ -132,11 +132,14 @@ function create_validate(rules) {
         const rule = rules_[i];
         const ret = rule.validate(value);
         if (rule.judge(ret)) {
-          if (rule.left) {
+          if (rule.break_valid) {
             return {valid: true, message: ''};
           }
           continue;
         } else {
+          if (rule.ignore_failure) {
+            continue;
+          }
           return {valid: false, message: rule.message(ret, value)};
         }
       }
