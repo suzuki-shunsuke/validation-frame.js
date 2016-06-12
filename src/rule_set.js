@@ -11,4 +11,8 @@ rule_set.tel = value => validator.matches(value, /[0-9][-0-9]{4,17}/);
 rule_set.email = validator.isEmail;
 rule_set.whitelist = validator.isWhitelisted;
 
+rule.delay = value => {
+  setTimeout();
+};
+
 module.exports = rule_set;

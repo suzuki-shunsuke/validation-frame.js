@@ -24,8 +24,12 @@ vf.default_judge = (ret) => {
   return Boolean(ret.valid);
 };
 
-function create_judge(judge) {
-  return judge ? judge : vf.default_judge;
+function create_judge(judge, reverse_judge) {
+  if (!judge) {
+    judge = vf.reverse_judge;
+  }
+
+  return reverse_judge ? ret => ! judge(ret) : judge;
 };
 
 vf.default_message = ret => {
@@ -102,7 +106,7 @@ function create_validate(rules) {
     }
     const has_params = 'params' in rule;
     rule.message = create_message(rule.message, has_params, rule.params);
-    rule.judge = create_judge(rule.judge);
+    rule.judge = create_judge(rule.judge, rule.reverse_judge);
     rule.validate = _create_validate(rule.validate, has_params, rule.params);
     rules_.push(rule);
   });

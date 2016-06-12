@@ -179,3 +179,16 @@ const validate = mv.create_validate([{
   'params': 10
 }]);
 ```
+
+## params.reverse\_judge
+
+params.reverse\_judge が true のとき、rule.judge関数の戻り値が反転される。
+
+次の例はASCII以外の文字を含んでいる場合(あるいは空文字の場合) true になる。
+
+```javascript
+const validate = mv.create_validate([{
+  'type': 'ascii',
+  'reverse_judge': true
+}]);
+```
