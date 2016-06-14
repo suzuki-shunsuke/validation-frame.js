@@ -192,3 +192,37 @@ const validate = mv.create_validate([{
   'reverse_judge': true
 }]);
 ```
+
+## 全ルールへのパラメータ
+
+```javascript
+const validate = mv.create_validate([{
+  'type': 'custom',
+  validate: (value, params, ...args) => {},
+  judge: (ret) => {},
+  message: (ret, value, params, ...args) => {},
+}], 1, 5);
+```
+
+## required オプション
+
+requiredルール(type属性が'required'なルール)は以下の特徴を持つ特殊な条件である。
+
+* requiredルールは一番最初にチェックされなければならない
+* required以外のルールはrequiredをクリアしていることを前提としている
+* validate関数はrequired関数(ゲッター・セッター)を持つ
+* requiredがfalseの場合でrequiredルールをクリアしなかった場合、それ以降のルールはチェックされず、true扱いとなる
+
+```javascript
+const validate = mv.create_validate([{
+  'type': 'required',
+}, {
+  'type': 'minlength',
+  'params': 10,
+}]);
+validate('');  // {valid: false, message: ''}
+validate('ff');  // {valid: false, message: ''}
+validate.required(false);
+validate('');  // {valid: true, message: ''}
+validate('ff');  // {valid: false, message: ''}
+```
