@@ -10,9 +10,9 @@ mocha.describe('vf.create_validate', () => {
   mocha.it('', () => {
     let message = 'Required!';
     const validate = vf.create_validate([
-      {'type': 'required', 'message': message},
+      {'type': 'required', message: message},
       {'type': 'max_length',
-        'message': (ret, value, params) => `value: ${value}`, params: 5},
+       message: (ret, value, params) => `value: ${value}`, params: 5},
     ]);
     chai.expect(validate('').valid).to.be.false;
     chai.expect(validate('').message).eql(message);

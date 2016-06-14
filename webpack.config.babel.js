@@ -4,7 +4,11 @@ import webpack from 'webpack';
 module.exports = [
   {
     entry: {
-      'dist/validation-frame': './src/main.js',
+      'dist/simple-getter-setter': './src/simple-getter-setter.js',
+      'dist/validation-rule-set': './src/validation-rule-set.js',
+      'dist/validation-frame': './src/validation-frame.js',
+      'dist/validation-prop': './src/validation-prop.js',
+      'dist/validation-model': './src/validation-model.js',
     },
     externals: [{
       'validator': true,
