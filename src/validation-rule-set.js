@@ -1,9 +1,9 @@
 module.exports = {
   after: require('./lib/after.js'),
   alpha: require('./lib/alpha.js'),
-  alpha_numeric: require('./lib/alpha_numeric.js'),
+  alphaNumeric: require('./lib/alphaNumeric.js'),
   before: require('./lib/before.js'),
-  byte_length: require('./lib/byte_length.js'),
+  byteLength: require('./lib/byteLength.js'),
   contains: require('./lib/contains.js'),
   currency: require('./lib/currency.js'),
   divible: require('./lib/divisible.js'),
@@ -16,5 +16,7 @@ module.exports = {
   ascii: require('./lib/ascii.js'),
   base64: require('./lib/base64.js'),
   bool: require('./lib/bool.js'),
-  credit_card: require('./lib/credit_card.js'),
+  creditCard: require('./lib/creditCard.js'),
+  required: require('./lib/required.js'),
+  maxLength: require('./lib/maxLength.js'),
 };

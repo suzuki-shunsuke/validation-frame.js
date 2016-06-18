@@ -1,7 +1,7 @@
 const isAlphanumeric = require('validator').isAlphanumeric;
 
-function alpha_numeric(locale, value) {
+function alphaNumeric(locale, value) {
   return arguments.length === 1 ? isAlphanumeric(locale) : isAlphanumeric(value, locale);
 }
 
-module.exports = alpha_numeric;
+module.exports = alphaNumeric;
