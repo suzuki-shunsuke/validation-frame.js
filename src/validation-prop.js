@@ -2,9 +2,10 @@ const vp = {};
 
 const vf = require('./validation-frame');
 
-vp.create_prop = (rules) => {
-  vf.rule_set = vp.rule_set;
-  const validate_ = vf.create_validate(rules);
+vp.ruleSet = vf.ruleSet.bind(vf);
+
+vp.createProp = (rules) => {
+  const validate_ = vf.createValidate(rules);
   function prop(value) {
     const p = arguments.length ? vp.prop(value) : vp.prop();
     p.message = vp.prop('');

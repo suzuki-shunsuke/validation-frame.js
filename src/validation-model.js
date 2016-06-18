@@ -1,50 +1,47 @@
 'use strict';
 
-const m = require('mithril');
 const _ = {
   forEach: require('lodash.foreach'),
-  pick: require('lodash.pick'),
-  assign: require('lodash.assign'),
   clone: require('lodash.clone'),
 };
 
 const vp = require('./validation-prop');
 
-vp.prop = m.prop;
-vp.rule_set = require('./validation-rule-set.umd');
+const vm = {};
 
+vm.ruleSet = vp.ruleSet.bind(vp);
 
-function create_model(resources_name, fields) {
-  let new_instance_key = 0;
+function createModel(resources_name, fields) {
+  let newInstanceKey = 0;
 
   const props = {};
   _.forEach(fields, (value, key) => {
-    props[key] = vp.create_prop(value);
+    props[key] = vp.createProp(value);
   });
 
   class Model {
-    constructor(field_names=[], pairs={}) {
-      const key_ = new_instance_key++;
+    constructor(fieldNames=[], pairs={}) {
+      const key_ = newInstanceKey++;
       this.key_ = () => key_;
       const relations = this.constructor.relations;
 
-      if (arguments.length === 1 && !Array.isArray(field_names)) {
-        pairs = field_names;
-        field_names = [];
+      if (arguments.length === 1 && !Array.isArray(fieldNames)) {
+        pairs = fieldNames;
+        fieldNames = [];
       }
 
-      field_names.forEach(field_name => {
-        if (field_name in relations) {
-          const C = relations[field_name];
+      fieldNames.forEach(fieldName => {
+        if (fieldName in relations) {
+          const C = relations[fieldName];
           if (Array.isArray(C)) {
-            this[field_name] = m.prop([]);
+            this[fieldName] = vm.prop([]);
           } else {
-            this[field_name] = m.prop(new C());
+            this[fieldName] = vm.prop(new C());
           }
-        } else if (field_name in props) {
-          this[field_name] = props[field_name]();
+        } else if (fieldName in props) {
+          this[fieldName] = props[fieldName]();
         } else {
-          this[field_name] = m.prop();
+          this[fieldName] = vm.prop();
         }
       });
       
@@ -53,15 +50,15 @@ function create_model(resources_name, fields) {
           let C = relations[key];
           if (Array.isArray(value)) {
             C = C[0];
-            this[key] = m.prop(value.map(e => e instanceof C ? e : new C(e)));
+            this[key] = vm.prop(value.map(e => e instanceof C ? e : new C(e)));
           } else {
-            this[key] = m.prop(value instanceof C ? value : new C(value));
+            this[key] = vm.prop(value instanceof C ? value : new C(value));
           }
         } else if (key in props) {
           this[key] = props[key]();
           this[key](value);
         } else {
-          this[key] = m.prop(value);
+          this[key] = vm.prop(value);
         }
       });
     }
@@ -72,4 +69,6 @@ function create_model(resources_name, fields) {
   return Model;
 }
 
-module.exports = create_model;
+vm.createModel = createModel;
+
+module.exports = vm;

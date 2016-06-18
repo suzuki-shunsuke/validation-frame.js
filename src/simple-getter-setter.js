@@ -1,21 +1,21 @@
 'use strict';
 
-function prop(initial_value) {
-  let inner_value = initial_value;
-  function getter_setter(value) {
+function prop(initialValue) {
+  let innerValue = initialValue;
+  function getterSetter(value) {
     if (arguments.length) {
-      inner_value = value;
+      innerValue = value;
       return value;
     } else {
-      return inner_value;
+      return innerValue;
     }
   }
 
-  getter_setter.toJSON = () => {
-    return inner_value;
+  getterSetter.toJSON = () => {
+    return innerValue;
   };
 
-  return getter_setter; 
+  return getterSetter; 
 }
 
 module.exports = prop;

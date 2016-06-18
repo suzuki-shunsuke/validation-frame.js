@@ -7,70 +7,114 @@ const _ = {
   clone: require('lodash.clone'),
   defaults: require('lodash.defaults'),
   forEach: require('lodash.foreach'),
+  find: require('lodash.find'),
 };
 
 /**
- * vf.create_validate
- * vf.rule_set ルールタイプ名 -> {
+ * vf.createValidate
+ * vf.ruleSet ルールタイプ名 -> {
  *   validate: 関数, params: パラメータ, message: メッセージ,
  *   judge: ジャッジ関数, validate: バリデート関数, async: boolean}
  */
 const vf = {};
 
-vf.default_judge = (ret) => {
+vf.defaultJudge = (ret) => {
   if (ret === true || ret === false) {
     return ret;
   }
   return Boolean(ret.valid);
 };
 
-function create_judge(judge, reverse_judge) {
+function createJudge(judge, reverseJudge) {
   if (!judge) {
-    judge = vf.reverse_judge;
+    judge = vf.defaultJudge;
   }
 
-  return reverse_judge ? ret => ! judge(ret) : judge;
+  return reverseJudge ? ret => ! judge(ret) : judge;
 };
 
-vf.default_message = ret => {
+vf.defaultMessage = ret => {
   return ret.message ? ret.message : '';
 };
 
-function create_message(message, has_params, params) {
+function createMessage(message, hasParams, params, ...commonParams) {
   const t = typeof message;
   if (t === 'string') {
     return () => message;
   } else if (t === 'function') {
-    if (has_params) {
+    if (hasParams) {
       if (Array.isArray(params)) {
         return (ret, value) => {
-          return message.bind(rule, ret, value).apply(params);
+          return message(ret, value, ...params.concat(commonParams));
         };
       } else {
-        return (ret, value) => message(ret, value, params);
+        return (ret, value) => message(ret, value, params, ...commonParams);
       }
     } else {
-      return message;
+      return (ret, value) => message(ret, value, ...commonParams);
     }
   } else {
-    return vf.default_message;
+    return vf.defaultMessage;
   }
 };
 
-function _create_validate(validate, has_params, params) {
-  if (has_params) {
-    return value => validate(value, params);
+function _createValidate(validate, hasParams, params, ...commonParams) {
+  if (hasParams) {
+    return value => validate(value, params, ...commonParams);
   } else {
-    return validate;
+    return value => validate(value, ...commonParams);
   }
 }
 
-function make_async(validate, judge, message) {
+function makeAsync(validate, judge, message) {
   return value => {
     const ret = validate(value);
     return judge(ret) ? Promise.resolve(ret) : Promise.reject(new Error(message(ret, value)));
   };
 }
+
+let ruleSet_ = {};
+
+function ruleSet(items) {
+  if (arguments.length) {
+    const items_ = {};
+    _.forEach(items, (value, key) => {
+      const t = typeof value;
+      if (t === 'function') {
+        items_[key] = {validate: value};
+      } else {
+        items_[key] = value;
+      }
+    });
+    ruleSet_ = items_;
+  } else {
+    return ruleSet_;
+  }
+}
+
+vf.ruleSet = ruleSet;
+
+function convertRule(rule) {
+  const t = typeof rule;
+  let rule_;
+  if (t === 'string') {
+    rule_ = _.clone(ruleSet_[rule]);
+  } else if (t === 'function') {
+    rule_ = {validate: rule};
+  } else {
+    rule_ = _.clone(rule);
+    if (rule.type && ruleSet_[rule.type]) {
+      _.defaults(rule_, ruleSet_[rule.type]);
+    }
+  }
+  const hasParams = 'params' in rule_;
+  rule_.message = createMessage(rule_.message, hasParams, rule_.params);
+  rule_.judge = createJudge(rule_.judge, rule_.reverseJudge);
+  rule_.validate = _createValidate(rule_.validate, hasParams, rule_.params);
+
+  return rule_;
+}
+
 
 /**
  *
@@ -78,46 +122,34 @@ function make_async(validate, judge, message) {
  *   {type: ルールタイプ名, params: パラメータ, message: メッセージ
  *    judge: ジャッジ関数, validate: バリデート関数, async: boolean}
  */
-function create_validate(rules) {
-  const rule_set = {};
-  _.forEach(this.rule_set, (value, key) => {
-    const t = typeof value;
-    if (t === 'function') {
-      rule_set[key] = {validate: value};
-    } else {
-      rule_set[key] = value;
-    }
-  });
-  const LEN = rules.length;
-  const rules_ = [];
+function createValidate(rules, ...params) {
+  const ruleSet = this.ruleSet();
   
-  rules.forEach(r => {
-    const t = typeof r;
-    let rule;
-    if (t === 'string') {
-      rule = rule_set[r];
-    } else if (t === 'function') {
-      rule = {'validate': r};
-    } else {
-      rule = _.clone(r);
-      if (r.type && rule_set[r.type]) {
-        _.defaults(rule, rule_set[r.type]);
-      }
+  const rules_ = rules.map(e => convertRule(e));
+
+  let required_rule = _.find(rules_, {type: 'required'});
+  if (required_rule) {
+    if (!('enabled' in required_rule)) {
+      required_rule.enabled = true;
     }
-    const has_params = 'params' in rule;
-    rule.message = create_message(rule.message, has_params, rule.params);
-    rule.judge = create_judge(rule.judge, rule.reverse_judge);
-    rule.validate = _create_validate(rule.validate, has_params, rule.params);
-    rules_.push(rule);
-  });
+  } else {
+    required_rule = _.clone(ruleSet.required);
+    required_rule.type = 'required';
+    required_rule = convertRule(required_rule);
+    required_rule.enabled = false;
+    rules_.unshift(required_rule);
+  }
+
   const ASYNC = rules_.some(rule => rule.async);
   if (ASYNC) {
     rules_.forEach(rule => {
       if (!rule.async) {
-        rule.validate = make_async(rule.validate, rule.judge, rule.message);
+        rule.validate = makeAsync(rule.validate, rule.judge, rule.message);
       }
     });
   }
+
+  const LEN = rules_.length;
 
   /**
    * @param {} value バリデーション対象の値
@@ -136,13 +168,16 @@ function create_validate(rules) {
         const rule = rules_[i];
         const ret = rule.validate(value);
         if (rule.judge(ret)) {
-          if (rule.break_valid) {
+          if (rule.breakValid) {
             return {valid: true, message: ''};
           }
           continue;
         } else {
-          if (rule.ignore_failure) {
+          if (rule.ignoreInvalid) {
             continue;
+          }
+          if (rule.type === 'required' && !rule.enabled) {
+            return {valid: true, message: ''};
           }
           return {valid: false, message: rule.message(ret, value)};
         }
@@ -151,9 +186,20 @@ function create_validate(rules) {
     }
   }
 
+  function required_(flag) {
+    if (arguments.length) {
+      required_rule.enabled = flag;
+      return flag;
+    } else {
+      return required_rule.enabled;
+    }
+  }
+
+  validate.required = required_;
+
   return validate;
 }
 
-vf.create_validate = create_validate;
+vf.createValidate = createValidate;
 
 module.exports = vf;

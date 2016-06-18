@@ -38,17 +38,17 @@ $ bower install --save-dev validation-frame validation-rule-set
 validation-frameは単体では動かず、rule-setを組み込む必要がある。
 
 ```javascript
-let vf = require('validation-frame');
-vf.rule_set = require('validation-rule-set');
+const vf = require('validation-frame');
+vf.ruleSet(require('validation-rule-set'));
 ```
 
 ## サンプルコード その1
 
 ```javascript
 const vf = require('validation-frame');
-vf.rule_set = require('validation-rule-set');
+vf.ruleSet(require('validation-rule-set'));
 
-const validate = mv.create_validate([{
+const validate = mv.createValidate([{
   'type': 'required',
   'message': '必須です!'
 }, {
@@ -73,7 +73,7 @@ validate('');  // {valid: false, message: '必須です!'}
 バリデーション結果がtrueならonFulfilledが、failureならonRejectedがコールされなければならない。
 
 ```javascript
-const validate = mv.create_validate([{
+const validate = mv.createValidate([{
   type: 'custom',  // カスタム関数を設定できる
   async: 'callback',
   message: 'カスタムです',
@@ -132,9 +132,7 @@ trueかfalseを返す関数
 
 ```javascript
 function(value, params, ret)
-
 ```
-
 
 ---
 
@@ -159,44 +157,44 @@ function message(ret, value, [params]) {
 validate 及び message にバインドされるパラメータ。
 paramsが配列の場合、applyされる
 
-## rule.break\_valid
+## rule.breakValid
 
-break\_valid が trueの場合、そのルールが trueな時点で全体が trueになる。
+breakValid が trueの場合、そのルールが trueな時点で全体が trueになる。
 
-## rule.ignore\_invalid
+## rule.ignoreInvalid
 
-ignore\_invalid が trueのとき、そのルールがfalseならそのルールは無視される。このオプションをtrueにするなら基本的にbreak\_validもtrueにすべきである。
+ignoreInvalid が trueのとき、そのルールがfalseならそのルールは無視される。このオプションをtrueにするなら基本的にbreakValidもtrueにすべきである。
 
 次の例は空文字か10文字以上の場合trueになる。
 
 ```javascript
-const validate = mv.create_validate([{
+const validate = mv.createValidate([{
   'type': 'empty',
-  'break_valid': true,
-  'ignore_invalid': true
+  'breakValid': true,
+  'ignoreInvalid': true
 }, {
   'type': 'minlength',
   'params': 10
 }]);
 ```
 
-## params.reverse\_judge
+## params.reverseJudge
 
-params.reverse\_judge が true のとき、rule.judge関数の戻り値が反転される。
+params.reverseJudge が true のとき、rule.judge関数の戻り値が反転される。
 
 次の例はASCII以外の文字を含んでいる場合(あるいは空文字の場合) true になる。
 
 ```javascript
-const validate = mv.create_validate([{
+const validate = mv.createValidate([{
   'type': 'ascii',
-  'reverse_judge': true
+  'reverseJudge': true
 }]);
 ```
 
 ## 全ルールへのパラメータ
 
 ```javascript
-const validate = mv.create_validate([{
+const validate = mv.createValidate([{
   'type': 'custom',
   validate: (value, params, ...args) => {},
   judge: (ret) => {},
@@ -214,8 +212,9 @@ requiredルール(type属性が'required'なルール)は以下の特徴を持�
 * requiredがfalseの場合でrequiredルールをクリアしなかった場合、それ以降のルールはチェックされず、true扱いとなる
 
 ```javascript
-const validate = mv.create_validate([{
+const validate = mv.createValidate([{
   'type': 'required',
+  enabled: true,
 }, {
   'type': 'minlength',
   'params': 10,
