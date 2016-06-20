@@ -11,4 +11,5 @@ module.exports = {
   validate: required,
   message: 'Required',
   judge: ret => ret,
+  enabled: true,
 };

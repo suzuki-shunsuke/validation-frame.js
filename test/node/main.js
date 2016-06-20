@@ -11,7 +11,8 @@ const vp = require('../../src/validation-prop.js');
 vp.prop = m.prop;
 vp.ruleSet(require('../../src/validation-rule-set.js'));
 
-const createModel = require('../../src/validation-model.js');
+const createModel = require('../../src/create_model.js');
+
 
 mocha.describe('vf.createValidate', () => {
   mocha.it('', () => {
@@ -34,15 +35,20 @@ mocha.describe('vf.createValidate', () => {
     chai.expect(validate('').valid).to.be.false;
     chai.expect(validate('').message).eql('Required');
   });
-  mocha.it('required option', () => {
-    const validate = vf.createValidate([]);
-    chai.expect(validate.required()).to.be.false;
-    chai.expect(validate('').valid).to.be.true;
-    chai.expect(validate('f').valid).to.be.true;
-    validate.required(true);
-    chai.expect(validate.required()).to.be.true;
+  mocha.it('rule may be only type name', () => {
+    const validate = vf.createValidate(['required',]);
     chai.expect(validate('').valid).to.be.false;
-    chai.expect(validate('f').valid).to.be.true;
+    chai.expect(validate('').message).eql('Required');
+  });
+  mocha.it('required option', () => {
+     const validate = vf.createValidate(['required']);
+     chai.expect(validate.required()).to.be.true;
+     chai.expect(validate('').valid).to.be.false;
+     chai.expect(validate('f').valid).to.be.true;
+     validate.required(false);
+     chai.expect(validate.required()).to.be.false;
+     chai.expect(validate('').valid).to.be.true;
+     chai.expect(validate('f').valid).to.be.true;
   });
 });
 
@@ -69,24 +75,42 @@ mocha.describe('vp.createProp()', () => {
 mocha.describe('createModel()', () => {
   mocha.it('', () => {
     const User = createModel('users', {
-      name: [{
+      name: ['', [{
         'type': 'ascii',
         'message': 'Ascii!'
-      }]
+      }]],
+      nameConfirm: ['', [{
+        validate: (value, model) => {
+          return value === model.name();
+        },
+        modelAppended: true,
+      }],],
     });
-    const user = new User({name: ''});
+    const user = new User();
     chai.expect(user.name()).equals('');
     chai.expect(user.name.valid()).to.be.false;
     chai.expect(user.name.message()).equals('');
     chai.expect(user.name.validate()).eql({valid: false, message: 'Ascii!'});
     chai.expect(user.name.valid()).to.be.false;
     chai.expect(user.name.message()).equals('Ascii!');
-
-    chai.expect(user.name('a')).equals('a');
-    chai.expect(user.name.valid()).to.be.false;
-    chai.expect(user.name.message()).equals('Ascii!');
+    user.name('ほ');
+    chai.expect(user.name.validate()).eql({valid: false, message: 'Ascii!'});
+    user.name('q');
     chai.expect(user.name.validate()).eql({valid: true, message: ''});
-    chai.expect(user.name.valid()).to.be.true;
-    chai.expect(user.name.message()).equals('');
+    user.nameConfirm.validate();
+    user.name('ほ');
+    chai.expect(user.validate()).eql({
+      valid: false, fields: {
+        name: {valid: false, message: 'Ascii!'},
+        nameConfirm: {valid: false, message: ''},
+      }
+    });
+    user.nameConfirm('ほ');
+    chai.expect(user.validate()).eql({
+      valid: false, fields: {
+        name: {valid: false, message: 'Ascii!'},
+        nameConfirm: {valid: true, message: ''},
+      }
+    });
   });
 });

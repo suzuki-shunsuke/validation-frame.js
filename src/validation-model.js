@@ -11,7 +11,7 @@ const vm = {};
 
 vm.ruleSet = vp.ruleSet.bind(vp);
 
-function createModel(resources_name, fields) {
+function createModel(fields) {
   let newInstanceKey = 0;
 
   const props = {};

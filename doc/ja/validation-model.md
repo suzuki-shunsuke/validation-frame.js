@@ -8,8 +8,13 @@ const vm.prop(require('simple-getter-setter'));
 
 const User = vm.createModel({
   id: [null, [{
-    'type': 'required'
-  }]],
+    'type': 'required',
+    modelAppended: false,
+  }, {
+    validate: (value, model) => {
+      return value === model.id_confirm();
+    },
+  }], {modelAppended: true}],
 });
 
 const user = new User({age: 20});

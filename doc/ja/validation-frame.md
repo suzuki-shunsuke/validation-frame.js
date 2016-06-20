@@ -206,10 +206,11 @@ const validate = mv.createValidate([{
 
 requiredルール(type属性が'required'なルール)は以下の特徴を持つ特殊な条件である。
 
-* requiredルールは一番最初にチェックされなければならない
-* required以外のルールはrequiredをクリアしていることを前提としている
-* validate関数はrequired関数(ゲッター・セッター)を持つ
-* requiredがfalseの場合でrequiredルールをクリアしなかった場合、それ以降のルールはチェックされず、true扱いとなる
+* requiredルールを指定しない場合、requiredルールは考慮されない
+* requiredルールのenabledのデフォルト値はtrueである
+* enabledがtrueの場合、他のルールと扱いは同じである
+* enabledがfalseの場合、requiredルールの結果がfalseなら結果はtrueとなり、validationは終了する
+* validate関数はrequiredルールのenabledの値のゲッター・セッターであるrequired関数を持つ
 
 ```javascript
 const validate = mv.createValidate([{
@@ -224,4 +225,13 @@ validate('ff');  // {valid: false, message: ''}
 validate.required(false);
 validate('');  // {valid: true, message: ''}
 validate('ff');  // {valid: false, message: ''}
+```
+
+# ルールの編集
+
+```javascript
+validate.rules.push({'type': 'required'});
+validate.pushRule();
+validate.rules[0]; // {type: 'required', params: ''}
+validate.pushCommonArgs(arg1, arg2);
 ```

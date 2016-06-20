@@ -32,6 +32,7 @@
     "lodash.defaults": "^4.0.1",
     "lodash.find": "^4.4.0",
     "lodash.foreach": "^4.3.0",
+    "lodash.values": "^4.1.0",
     "mithril": "^0.2.4",
     "mocha": "^2.5.3",
     "validator": "^5.2.0",

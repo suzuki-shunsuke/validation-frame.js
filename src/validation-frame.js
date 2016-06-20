@@ -18,7 +18,7 @@ const _ = {
  */
 const vf = {};
 
-vf.defaultJudge = (ret) => {
+vf.defaultJudge = ret => {
   if (ret === true || ret === false) {
     return ret;
   }
@@ -37,33 +37,21 @@ vf.defaultMessage = ret => {
   return ret.message ? ret.message : '';
 };
 
-function createMessage(message, hasParams, params, ...commonParams) {
+function createMessage(message, ...params) {
   const t = typeof message;
   if (t === 'string') {
     return () => message;
   } else if (t === 'function') {
-    if (hasParams) {
-      if (Array.isArray(params)) {
-        return (ret, value) => {
-          return message(ret, value, ...params.concat(commonParams));
-        };
-      } else {
-        return (ret, value) => message(ret, value, params, ...commonParams);
-      }
-    } else {
-      return (ret, value) => message(ret, value, ...commonParams);
-    }
+    return (ret, value) => {
+      return message(ret, value, ...params);
+    };
   } else {
     return vf.defaultMessage;
   }
 };
 
-function _createValidate(validate, hasParams, params, ...commonParams) {
-  if (hasParams) {
-    return value => validate(value, params, ...commonParams);
-  } else {
-    return value => validate(value, ...commonParams);
-  }
+function _createValidate(validate, ...params) {
+  return value => validate(value, ...params);
 }
 
 function makeAsync(validate, judge, message) {
@@ -94,11 +82,12 @@ function ruleSet(items) {
 
 vf.ruleSet = ruleSet;
 
-function convertRule(rule) {
+function convertRule(rule, ...params) {
   const t = typeof rule;
   let rule_;
   if (t === 'string') {
     rule_ = _.clone(ruleSet_[rule]);
+    rule_.type = rule;
   } else if (t === 'function') {
     rule_ = {validate: rule};
   } else {
@@ -107,10 +96,27 @@ function convertRule(rule) {
       _.defaults(rule_, ruleSet_[rule.type]);
     }
   }
-  const hasParams = 'params' in rule_;
-  rule_.message = createMessage(rule_.message, hasParams, rule_.params);
+  if ('params' in rule_) {
+    if (Array.isArray(rule_.params)) {
+      rule_.message = createMessage(
+        rule_.message, ...rule.params.concat(params)
+      );
+      rule_.validate = _createValidate(
+        rule_.validate, ...rule.params.concat(params)
+      );
+    } else {
+      rule_.message = createMessage(
+        rule_.message, ...[rule_.params].concat(params)
+      );
+      rule_.validate = _createValidate(
+        rule_.validate, ...[rule_.params].concat(params)
+      );
+    }
+  } else {
+    rule_.message = createMessage(rule_.message, ...params);
+    rule_.validate = _createValidate(rule_.validate, ...params);
+  }
   rule_.judge = createJudge(rule_.judge, rule_.reverseJudge);
-  rule_.validate = _createValidate(rule_.validate, hasParams, rule_.params);
 
   return rule_;
 }
@@ -125,7 +131,7 @@ function convertRule(rule) {
 function createValidate(rules, ...params) {
   const ruleSet = this.ruleSet();
   
-  const rules_ = rules.map(e => convertRule(e));
+  const rules_ = rules.map(e => convertRule(e, ...params));
 
   let required_rule = _.find(rules_, {type: 'required'});
   if (required_rule) {
@@ -137,7 +143,6 @@ function createValidate(rules, ...params) {
     required_rule.type = 'required';
     required_rule = convertRule(required_rule);
     required_rule.enabled = false;
-    rules_.unshift(required_rule);
   }
 
   const ASYNC = rules_.some(rule => rule.async);
